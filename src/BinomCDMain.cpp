@@ -78,7 +78,7 @@ BinomCDFrame::BinomCDFrame(wxFrame *frame, const wxString& title)
     boxsizer->Add(islider,0,wxALL,5);
 
     output = new wxTextCtrl(this,103,_(""),wxDefaultPosition,wxSize(output_width,output_height),wxTE_MULTILINE|wxTE_READONLY);
-    h_text = val::ToString(alpha) + "\n";
+    h_text = val::ToString(alpha) + "\n" + val::ToString(n) + "\n";
     h_text += "p <= " + val::ToString(p);
     {
         wxFont myfont(output->GetFont());
@@ -199,23 +199,23 @@ void BinomCDFrame::OnChangeTextSize(wxCommandEvent &event)
 {
     int id=event.GetId();
     wxFont myfont(output->GetFont());
-    int mysize=myfont.GetPointSize ();
+    //int mysize=myfont.GetPointSize ();
 
-    if (id==20001) mysize++;
-    else mysize--;
+    if (id==20001) textsize++;
+    else textsize--;
 
-    if (mysize>20) mysize=20;
-    if (mysize<9) mysize=9;
-    myfont.SetPointSize(mysize);
+    if (textsize>20) textsize=20;
+    if (textsize<9) textsize=9;
+    myfont.SetPointSize(textsize);
     output->SetFont(myfont);
 }
 
 void BinomCDFrame::OnHypothesisTest(wxCommandEvent &event)
 {
-    wxString entry = L"\u03B1; p<= [p>=] p[=]", relation;
+    wxString entry = L"\u03B1; n; p<= [p>=] p[=]", relation;
     test_type type = test_type::R;
 
-    val::MultiLineDialog dialog(this,h_text,entry,240,100,"Hypothesentest");
+    val::MultiLineDialog dialog(this,h_text,entry,240,100,"Hypothesentest",textsize);
     if (dialog.ShowModal()==wxID_CANCEL) return;
     h_text = dialog.GetSettingsText();
 
@@ -223,12 +223,13 @@ void BinomCDFrame::OnHypothesisTest(wxCommandEvent &event)
     auto values = getwordsfromstring(std::string(h_text), separators);
     int m = values.length();
     if (m >= 1) alpha = val::FromString<double>(values[0]);
-    if (m >= 3) {
-        if (values[2] == "<" || values[2] == "<=") {
+    if (m >=2 ) n = val::FromString<int>(values[1]);
+    if (m >= 4) {
+        if (values[3] == "<" || values[3] == "<=") {
             type = test_type::R;
             relation = "<=";
         }
-        else if (values[2] == ">" || values[2] == ">=") {
+        else if (values[3] == ">" || values[3] == ">=") {
             type = test_type::L;
             relation = ">=";
         }
@@ -237,11 +238,12 @@ void BinomCDFrame::OnHypothesisTest(wxCommandEvent &event)
             relation = "==";
         }
     }
-    if (m >= 4) p = double(val::FromString<val::rational>(values[3]));
+    if (m >= 5) p = double(val::FromString<val::rational>(values[4]));
 
     if (alpha > 0.5 || alpha < 0) alpha = 0.05;
     if (p < 0 || p > 1) p = 0.5;
-    h_text = val::ToString(alpha) + "\n" + "p " + relation + " " + val::ToString(p);
+    if (n < 0) n = 100;
+    h_text = val::ToString(alpha) + "\n" + val::ToString(n) +  "\np " + relation + " " + val::ToString(p);
     std::thread t(hypothesentest,p,n,alpha,type);
     t.detach();
 }
@@ -251,9 +253,10 @@ void BinomCDFrame::WriteResults(MyThreadEvent& event)
 {
     if (event.GetId() == event_type::TEST) {
         input_p->SetValue(val::ToString(p));
+        input_n->SetValue(val::ToString(n));
         //int k1 = event.GetLeftNumber(), k2 = event.GetRightNumber();
         //wxMessageBox(val::ToString(k1) + " , " + val::ToString(k2));
-        islider->setvalues(event.GetLeftNumber(), event.GetRightNumber());
+        islider->setallvalues(0,n,event.GetLeftNumber(), event.GetRightNumber());
         //Compute();
         return;
     }

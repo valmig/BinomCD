@@ -96,6 +96,7 @@ public:
     int getrightvalue() const {return rightvalue;}
     void setlimits(int l_val,int r_val);
     void setvalues(int l, int r);
+    void setallvalues(int leftlimit, int rightlimit, int l_value, int r_value);
 private:
     wxWindow *Parent=nullptr;
     int identity=0;
