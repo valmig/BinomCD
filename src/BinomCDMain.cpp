@@ -60,12 +60,14 @@ BinomCDFrame::BinomCDFrame(wxFrame *frame, const wxString& title)
     wxBoxSizer *boxsizer = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer *in_boxsizer = new wxBoxSizer(wxHORIZONTAL);
     //
-    wxStaticText *p_text = new wxStaticText(this,201,_("p:"));
-    wxStaticText *n_text = new wxStaticText(this,202,_("n:"));
-    wxStaticText *k_text = new wxStaticText(this,203,_("k1, k2:"));
+    wxPanel *panel = new wxPanel(this,10);
+    //
+    wxStaticText *p_text = new wxStaticText(panel,201,_("p:"));
+    wxStaticText *n_text = new wxStaticText(panel,202,_("n:"));
+    wxStaticText *k_text = new wxStaticText(panel,203,_("k1, k2:"));
 
-    input_p = new wxTextCtrl(this,101,_("0,5"),wxDefaultPosition,wxDefaultSize,wxTE_PROCESS_ENTER|wxTE_RIGHT);
-    input_n = new wxTextCtrl(this,102,_("100"),wxDefaultPosition,wxDefaultSize,wxTE_PROCESS_ENTER|wxTE_RIGHT,wxTextValidator(wxFILTER_NUMERIC));
+    input_p = new wxTextCtrl(panel,101,_("0,5"),wxDefaultPosition,wxDefaultSize,wxTE_PROCESS_ENTER|wxTE_RIGHT);
+    input_n = new wxTextCtrl(panel,102,_("100"),wxDefaultPosition,wxDefaultSize,wxTE_PROCESS_ENTER|wxTE_RIGHT,wxTextValidator(wxFILTER_NUMERIC));
     in_boxsizer->Add(p_text,0,wxALL,2);
     in_boxsizer->Add(input_p,0,wxALL,5);
     in_boxsizer->Add(n_text,0,wxALL,2);
@@ -74,10 +76,10 @@ BinomCDFrame::BinomCDFrame(wxFrame *frame, const wxString& title)
     boxsizer->Add(in_boxsizer,0,wxALL|wxEXPAND,5);
     boxsizer->Add(k_text,0,wxALL,5);
 
-    islider = new val::IntervalSlider(this,301,270,15);
+    islider = new val::IntervalSlider(panel,301,270,15);
     boxsizer->Add(islider,0,wxALL,5);
 
-    output = new wxTextCtrl(this,103,_(""),wxDefaultPosition,wxSize(output_width,output_height),wxTE_MULTILINE|wxTE_READONLY);
+    output = new wxTextCtrl(panel,103,_(""),wxDefaultPosition,wxSize(output_width,output_height),wxTE_MULTILINE|wxTE_READONLY);
     h_text = val::ToString(alpha) + "\n" + val::ToString(n) + "\n";
     h_text += "p <= " + val::ToString(p);
     {
@@ -92,8 +94,8 @@ BinomCDFrame::BinomCDFrame(wxFrame *frame, const wxString& title)
     // create a status bar with some information about the used wxWidgets version
     CreateStatusBar(2);
     //
-    SetSizer(boxsizer);
-    boxsizer->Fit(this);
+    panel->SetSizer(boxsizer);
+    boxsizer->Fit(panel);
     boxsizer->SetSizeHints(this);
 
 
