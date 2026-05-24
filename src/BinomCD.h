@@ -6,9 +6,12 @@
 #include <val_filesys.h>
 #include <Glist.h>
 #include <d_array.h>
+#include <mutex>
 
 extern wxFrame *MyFrame;
 extern std::string iconpath,settingsdir,valdir,filesep,settingsfile, alticonpath;
+extern std::mutex computingmutex;
+
 
 enum test_type{L,R,B};
 enum event_type{COMPCD,TEST};
@@ -44,8 +47,10 @@ private:
 // ----------------------------------------------------------------------------------------
 
 
-val::Glist<std::string> getwordsfromstring(const std::string &sf,const val::d_array<char>& separators, int emptywords = 0,
-                                           const val::d_array<char> &ignore = val::d_array<char>());
+// val::Glist<std::string> getwordsfromstring(const std::string &sf,const val::d_array<char>& separators, int emptywords = 0,
+//                                            const val::d_array<char> &ignore = val::d_array<char>());
+
+#define getwordsfromstring val::getwordsfromstring<char, val::d_array, val::Glist>
 
 void computeCD(const double &p,int n,int k1,int k2,wxString &s_output);
 

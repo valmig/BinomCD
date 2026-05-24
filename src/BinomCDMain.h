@@ -33,7 +33,6 @@ class BinomCDFrame: public wxFrame
         wxSize framesize = wxDefaultSize;
         int n=100,k1=0,k2=100,iscomputing=0,output_width=260,output_height=120,textsize=11;
         double p=0.5, alpha = 0.05;
-        void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void Onparchanged(wxCommandEvent&);

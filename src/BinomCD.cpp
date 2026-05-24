@@ -9,6 +9,7 @@
 
 wxFrame *MyFrame = nullptr;
 
+std::mutex computingmutex;
 
 #ifdef _WIN32
 std::string valdir = val::CurrentHomeDir()+"\\AppData\\Roaming\\MVPrograms",
@@ -26,48 +27,6 @@ wxDEFINE_EVENT(MY_EVENT,MyThreadEvent);
 
 
 
-/*
-double round(const double& x,int k=4)
-{
-    double y=val::abs(x),faktor=1,d=0,z=1,y1;
-    unsigned limit=~0;
-    int i;
-
-    //limit = ~limit;
-    //std::cout<<" "<<limit<<"  ";
-
-    for(i=0;i<k;++i) z*=10.0;
-
-    y*=z;
-
-    //std::cout<<" "<<y<<"  ";
-
-    while (faktor<y) faktor*=10;
-    if (faktor>y) faktor/=10;
-    //std::cout<<" "<<faktor<<"  ";
-    if (y<double(limit)) {
-        //std::cout<<" "<<limit<<"  ";
-        d=unsigned(y);
-        y-=d;
-        if (y>=0.5) ++d;
-        if (x<0) return -d/z;
-        else return d/z;
-    }
-    y1=y;
-    while (faktor>=1) {
-        d+= double(unsigned(y1/faktor)) *faktor;
-        y1-=double(unsigned(y1/faktor)) *faktor;
-        faktor/=10;
-    }
-    //std::cout<<" "<<d<<"  ";
-    y-=d;
-    if (y>=0.5) ++d;
-    if (x<0) return -d/z;
-    else return d/z;
-
-}
-
-*/
 
 double Phi(double x)
 {
@@ -137,7 +96,7 @@ double binomcd(int n,int k1,int k2,const double &p)
  return b;
 }
 
-
+/*
 val::Glist<std::string> getwordsfromstring(const std::string &sf,const val::d_array<char>& separators,int emptywords,
                                            const val::d_array<char> &ignore)
 {
@@ -159,10 +118,11 @@ val::Glist<std::string> getwordsfromstring(const std::string &sf,const val::d_ar
 
     return values;
 }
-
+*/
 
 void computeCD(const double &p,int n,int k1,int k2,wxString &s_output)
 {
+	std::lock_guard<std::mutex> guard(computingmutex);
     double mu,sigma,h;
 
     s_output="";
@@ -174,7 +134,10 @@ void computeCD(const double &p,int n,int k1,int k2,wxString &s_output)
     h=binomcd(n,k1,k2,p);
     s_output+="\n binomcd  = "+ val::ToString(h) + "   " + val::ToString(val::round(h));
     if (k1 > k2) h= 0;
-    else h = normalcd(mu,sigma,k2)-normalcd(mu,sigma,k1-1);
+    else {
+		h = normalcd(mu,sigma,k2);
+		if (k1) h -= normalcd(mu,sigma,k1-1);
+	}
     s_output+="\n normalcd = "+ val::ToString(h) + "   " + val::ToString(val::round(h));
 
     MyThreadEvent event(MY_EVENT);
@@ -184,6 +147,7 @@ void computeCD(const double &p,int n,int k1,int k2,wxString &s_output)
 
 void hypothesentest(double p, int n, double alpha, test_type type)
 {
+	std::lock_guard<std::mutex> guard(computingmutex);
     int k1=0, k2 = n;
     double accept = 1 - alpha, h;
     switch (type) {

@@ -51,6 +51,10 @@ BinomCDFrame::BinomCDFrame(wxFrame *frame, const wxString& title)
     fileMenu->Append(1001, _("&Quit\tAlt-F4"), _("Quit the application"));
     mbar->Append(fileMenu, _("&File"));
 
+    wxMenu *ToolsMenu = new wxMenu();
+    ToolsMenu->Append(20003, _("Hypothesis Test\tCtrl-T"));
+    mbar->Append(ToolsMenu, _("&Tools"));
+
     wxMenu* helpMenu = new wxMenu(_T(""));
     helpMenu->Append(10001, _("&About\tF1"), _("Show info about this application"));
     mbar->Append(helpMenu, _("&Help"));
@@ -115,11 +119,11 @@ BinomCDFrame::BinomCDFrame(wxFrame *frame, const wxString& title)
     Bind(wxEVT_COMMAND_MENU_SELECTED,&BinomCDFrame::OnHypothesisTest,this,20003);
     //
 
-    wxAcceleratorEntry entries[3];
+    wxAcceleratorEntry entries[2];
     entries[0].Set(wxACCEL_CTRL, (int) '+', 20001);
     entries[1].Set(wxACCEL_CTRL, (int) '-', 20002);
-    entries[2].Set(wxACCEL_CTRL, (int) 'T', 20003);
-    wxAcceleratorTable accel(3, entries);
+    //entries[2].Set(wxACCEL_CTRL, (int) 'T', 20003);
+    wxAcceleratorTable accel(2, entries);
     SetAcceleratorTable(accel);
     //
     MyFrame = this;
@@ -157,7 +161,7 @@ void BinomCDFrame::Onparchanged(wxCommandEvent&)
     p = double(val::FromString<val::rational>(std::string(input_p->GetValue())));
     if (p<0 || p>1) {
         p=1;
-        input_p->SetValue(val::ToString(p));
+		input_p->SetValue(val::ToString(p));
     }
     islider->setlimits(0,n);
     Compute();
@@ -165,6 +169,7 @@ void BinomCDFrame::Onparchanged(wxCommandEvent&)
 
 void BinomCDFrame::OnFocuslost(wxFocusEvent &event)
 {
+	// std::cout << "\n Focus lost!" << std::endl;
     n = val::FromString<int>(std::string(input_n->GetValue()));
     if (n<0) {
         n=100;
@@ -240,12 +245,16 @@ void BinomCDFrame::OnHypothesisTest(wxCommandEvent &event)
             relation = "==";
         }
     }
-    if (m >= 5) p = double(val::FromString<val::rational>(values[4]));
+    if (m >= 5) {
+		p = double(val::FromString<val::rational>(values[4]));
+	}
 
     if (alpha > 0.5 || alpha < 0) alpha = 0.05;
     if (p < 0 || p > 1) p = 0.5;
     if (n < 0) n = 100;
     h_text = val::ToString(alpha) + "\n" + val::ToString(n) +  "\np " + relation + " " + val::ToString(p);
+	input_p->SetValue(val::ToString(p));
+	input_n->SetValue(val::ToString(n));
     std::thread t(hypothesentest,p,n,alpha,type);
     t.detach();
 }
@@ -254,8 +263,8 @@ void BinomCDFrame::OnHypothesisTest(wxCommandEvent &event)
 void BinomCDFrame::WriteResults(MyThreadEvent& event)
 {
     if (event.GetId() == event_type::TEST) {
-        input_p->SetValue(val::ToString(p));
-        input_n->SetValue(val::ToString(n));
+        // input_p->SetValue(val::ToString(p));
+        // input_n->SetValue(val::ToString(n));
         //int k1 = event.GetLeftNumber(), k2 = event.GetRightNumber();
         //wxMessageBox(val::ToString(k1) + " , " + val::ToString(k2));
         islider->setallvalues(0,n,event.GetLeftNumber(), event.GetRightNumber());
@@ -282,10 +291,6 @@ BinomCDFrame::~BinomCDFrame()
     }
 }
 
-void BinomCDFrame::OnClose(wxCloseEvent &event)
-{
-    Destroy();
-}
 
 void BinomCDFrame::OnQuit(wxCommandEvent &event)
 {
